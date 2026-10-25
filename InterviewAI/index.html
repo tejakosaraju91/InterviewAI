@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InterviewAI — Mock Interview &amp; Interview Prep Pro</title>
+  <link rel="stylesheet" href="css/style.css"/>
+
+  <!-- CDN Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── Top Bar ── -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🤖</div>
+    InterviewAI
+  </div>
+  <div class="topbar-nav">
+    <button class="btn-nav" id="navInterview" onclick="navTo('interview-flow')">🎤 <span>Mock Interview</span></button>
+    <button class="btn-nav" id="navQA20" onclick="navTo('qa20')">📋 <span>Interview Prep Pro</span></button>
+    <select class="lang-select" id="topLangSelect" aria-label="Language"></select>
+  </div>
+</header>
+
+<!-- ── Toast Container ── -->
+<div id="toastContainer"></div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 1: WELCOME
+══════════════════════════════════════════════ -->
+<section class="screen" id="screen-welcome">
+  <div class="welcome-card">
+    <h1>InterviewAI</h1>
+    <p class="subtitle">Your AI-powered mock interview coach. No account needed.</p>
+
+    <form id="welcomeForm" novalidate>
+      <div class="form-group">
+        <label for="inp-name">Your Full Name</label>
+        <input type="text" id="inp-name" placeholder="e.g. Priya Sharma" required autocomplete="name"/>
+      </div>
+
+      <div class="form-group">
+        <label for="inp-role">Target Role</label>
+        <input type="text" id="inp-role" placeholder="e.g. Software Engineer, Data Scientist" required list="roleList"/>
+        <datalist id="roleList">
+          <option value="Software Engineer"/>
+          <option value="Frontend Developer"/>
+          <option value="Backend Developer"/>
+          <option value="Full Stack Developer"/>
+          <option value="Data Scientist"/>
+          <option value="Machine Learning Engineer"/>
+          <option value="Data Analyst"/>
+          <option value="Web Developer"/>
+          <option value="Java Developer"/>
+          <option value="Python Developer"/>
+          <option value="DevOps Engineer"/>
+          <option value="Mobile Developer"/>
+        </datalist>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="inp-exp">Experience Level</label>
+          <select id="inp-exp">
+            <option value="fresher">Fresher</option>
+            <option value="1-3">1–3 Years</option>
+            <option value="3+">3+ Years</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inp-diff">Difficulty</label>
+          <select id="inp-diff">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="inp-lang">Interview Language</label>
+        <select class="lang-select" id="inp-lang"></select>
+      </div>
+
+      <button type="submit" class="btn-primary btn-full" style="margin-top:8px">
+        Continue →
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 2: RESUME UPLOAD
+══════════════════════════════════════════════ -->
+<section class="screen" id="screen-upload">
+  <div class="upload-card">
+    <h2>📄 Upload Your Resume</h2>
+    <p class="subtitle">We'll parse it to personalise your interview questions.</p>
+
+    <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Upload resume">
+      <div class="drop-icon">📂</div>
+      <p><strong>Drag & drop</strong> your resume here, or <strong>click to browse</strong></p>
+      <p style="margin-top:6px;font-size:0.82rem">Supports PDF, DOCX, TXT</p>
+    </div>
+    <input type="file" id="resumeFile" accept=".pdf,.docx,.txt" style="display:none"/>
+
+    <div class="parse-loader" id="parseLoader">
+      <div class="spinner"></div>
+      <span>Parsing resume…</span>
+    </div>
+
+    <div id="resumeSummary"></div>
+
+    <div class="upload-actions">
+      <button class="btn-primary" id="btnStartInterview">Start Interview →</button>
+      <button class="btn-outline" id="btnSkipUpload">Skip (no resume)</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 3: INTERVIEW
+══════════════════════════════════════════════ -->
+<section class="screen" id="screen-interview">
+  <div class="interview-layout">
+
+    <!-- Left: Avatar -->
+    <aside class="avatar-card">
+      <div class="avatar-wrap">
+        <div id="avatarContainer"></div>
+      </div>
+      <div class="avatar-name">Nova</div>
+      <div class="avatar-title">AI Interviewer</div>
+      <div class="avatar-state-label" id="avatarStateLabel">
+        <span class="state-dot"></span>
+        <span id="avatarStateText">Idle</span>
+      </div>
+    </aside>
+
+    <!-- Right: Interview panel -->
+    <div class="interview-panel">
+
+      <!-- Progress -->
+      <div class="progress-card">
+        <div class="progress-meta">
+          <span id="progressText">Question 1 of 10</span>
+          <span class="timer-display" id="timerDisplay">00:00</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressBar"></div>
+        </div>
+      </div>
+
+      <!-- Question -->
+      <div class="question-card">
+        <div class="question-meta">
+          <span class="q-type-badge" id="questionType">INTRO</span>
+        </div>
+        <p id="questionText">Loading question…</p>
+      </div>
+
+      <!-- Answer -->
+      <div class="answer-card">
+        <label for="answerInput">Your Answer</label>
+        <textarea id="answerInput" placeholder="Type your answer here, or use the mic button to speak…" rows="4"></textarea>
+        <div class="answer-actions">
+          <button class="btn-mic" id="btnMic" title="Speak answer" aria-label="Microphone">🎤</button>
+          <button class="btn-primary btn-sm" id="btnSend">Send ↵</button>
+          <button class="btn-secondary btn-sm" id="btnRepeat">🔁 Repeat</button>
+          <button class="btn-outline btn-sm" id="btnSkipQ">Skip</button>
+          <button class="btn-outline btn-sm" id="btnPause">⏸ Pause</button>
+          <span id="liveBadge"></span>
+        </div>
+      </div>
+
+      <!-- Controls row -->
+      <div class="interview-controls">
+        <span style="font-size:0.82rem;color:var(--text-muted)">Tip: Press Enter to send. Use mic for voice answers.</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 4: REPORT
+══════════════════════════════════════════════ -->
+<section class="screen" id="screen-report">
+  <div id="reportContainer"></div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 5: RESUME TO 20 Q&A
+══════════════════════════════════════════════ -->
+<section class="screen" id="screen-qa20">
+  <div class="qa20-wrap">
+
+    <div class="qa20-hero">
+      <h2>📋 Interview Prep Pro</h2>
+      <p>Upload your resume and target role — get 20 personalised interview Q&amp;As with best answers and tips instantly.</p>
+    </div>
+
+    <div class="qa20-setup-card">
+      <div class="qa20-setup-grid">
+        <!-- Full-width drop zone -->
+        <div class="qa20-drop-zone" id="qa20DropZone" role="button" tabindex="0">
+          <div class="drop-icon">📂</div>
+          <p><strong>Drag &amp; drop</strong> your resume, or <strong>click to browse</strong></p>
+          <p style="font-size:0.82rem;margin-top:4px">PDF, DOCX, TXT supported</p>
+        </div>
+        <input type="file" id="qa20FileInput" accept=".pdf,.docx,.txt" style="display:none"/>
+
+        <div class="form-group" style="margin:0">
+          <label for="qa20Name">Your Name</label>
+          <input type="text" id="qa20Name" placeholder="e.g. Priya Sharma"/>
+        </div>
+
+        <div class="form-group" style="margin:0">
+          <label for="qa20Role">Target Role</label>
+          <input type="text" id="qa20Role" placeholder="e.g. Software Engineer" list="qa20RoleList"/>
+          <datalist id="qa20RoleList">
+            <option value="Software Engineer"/>
+            <option value="Frontend Developer"/>
+            <option value="Backend Developer"/>
+            <option value="Full Stack Developer"/>
+            <option value="Data Scientist"/>
+            <option value="Machine Learning Engineer"/>
+            <option value="AI/ML Intern"/>
+            <option value="Data Analyst"/>
+            <option value="Web Developer"/>
+            <option value="Java Developer"/>
+            <option value="Python Developer"/>
+            <option value="DevOps Engineer"/>
+          </datalist>
+        </div>
+      </div>
+
+      <div class="qa20-parse-loader" id="qa20ParseLoader">
+        <div class="spinner"></div>
+        <span>Parsing resume…</span>
+      </div>
+
+      <button class="btn-primary qa20-generate-btn" id="qa20GenerateBtn">
+        ✨ Generate 20 Questions &amp; Answers
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div class="qa20-results-section" id="qa20ResultsSection">
+      <div class="qa20-results-topbar">
+        <h3>🎯 Interview Prep Pro — 20 Q&amp;As</h3>
+        <div class="qa20-results-actions">
+          <button class="btn-secondary btn-sm" onclick="copyAllQA20()">📋 Copy All</button>
+          <button class="btn-secondary btn-sm" onclick="downloadQA20PDF()">⬇️ Download PDF</button>
+          <button class="btn-outline btn-sm" onclick="regenerateQA20()">🔄 Regenerate</button>
+        </div>
+      </div>
+      <div id="qa20Results"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Scripts ── -->
+<script>
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+<script src="js/questions.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/scorer.js"></script>
+<script src="js/avatar.js"></script>
+<script src="js/speech.js"></script>
+<script src="js/report.js"></script>
+<script src="js/app.js"></script>
+<script src="js/qa20.js"></script>
+
+<!-- Wire up avatar state label to speech manager -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Sync avatar state label
+    function setAvatarLabel(text, dotColor) {
+      const lbl = document.getElementById("avatarStateText");
+      const dot = document.querySelector(".state-dot");
+      if (lbl) lbl.textContent = text;
+      if (dot) dot.style.background = dotColor || "#10B981";
+    }
+
+    // Patch Avatar.setState to also update label
+    const origSetState = Avatar.prototype.setState;
+    Avatar.prototype.setState = function(state) {
+      origSetState.call(this, state);
+      const map = {
+        speaking: ["Speaking 🗣️", "#06B6D4"],
+        listening: ["Listening 👂", "#10B981"],
+        thinking: ["Thinking 💭", "#F59E0B"],
+        idle: ["Idle", "#9CA3AF"]
+      };
+      const [text, color] = map[state] || ["Idle", "#9CA3AF"];
+      setAvatarLabel(text, color);
+    };
+  });
+</script>
+
+</body>
+</html>
